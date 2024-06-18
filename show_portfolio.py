@@ -36,8 +36,8 @@ def read_exchange_rates() -> dict[str, float]:
 exchange_rates = read_exchange_rates()
 
 
-def read_trades(filter: list[str] = []) -> pd.DataFrame:
-    data = pd.read_csv("trades.tsv", sep="\t", comment="#")
+def read_trades(filter: list[str] = [], file="trades.tsv") -> pd.DataFrame:
+    data = pd.read_csv(file, sep="\t", comment="#")
     return data[~data["ticker"].isin(filter)]
 
 
@@ -274,11 +274,12 @@ def get_overview(data: pd.DataFrame) -> None:
 
 def get_dividends(data: pd.DataFrame) -> pd.DataFrame:
     dividends = pd.DataFrame(
-        columns=["ticker", "date", "year", "total_gain_czk", "currency"]
+        columns=["name","ticker", "date", "year", "total_gain_czk", "currency"]
     )
     for ticker in data["ticker"].unique():
         stock = yf.Ticker(ticker)
         currency = data[data["ticker"] == ticker].iloc[0]["currency"]
+        name = data[data["ticker"] == ticker].iloc[0]["name"]
         # stock_dividends = stock.actions.reset_index()
         stock_dividends = stock.dividends.reset_index()
         if len(stock_dividends) == 0:
@@ -305,6 +306,7 @@ def get_dividends(data: pd.DataFrame) -> pd.DataFrame:
         )
         for index, row in stock_dividends.iterrows():
             dividends.loc[len(dividends)] = [
+                name,
                 ticker,
                 row["Date"],
                 row["year"],
